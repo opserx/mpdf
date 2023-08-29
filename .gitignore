@@ -1,0 +1,5 @@
+/venv/
+app.log
+/shelf/
+/workspace.xml
+/.idea
