@@ -59,6 +59,8 @@ def walk_blur(root_path):
                 result = detect_blur_pdf(filename)
                 if result is not None:
                     scores.update({filename: result})
+                else:
+                    logger.debug("无法检测文件: %s", filename)
 
                 pbar.update(1)
                 current += 1
@@ -91,7 +93,7 @@ def detect_blur_pdf(file_name):
     import tempfile
     image_file_object = page.images[0]
 
-    with tempfile.NamedTemporaryFile() as fp:
+    with tempfile.NamedTemporaryFile(suffix=".png") as fp:
         fp.write(image_file_object.data)
         temp_file_name = fp.name
         return detect_blur(temp_file_name)
