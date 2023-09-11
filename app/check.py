@@ -1,6 +1,7 @@
 import csv
 import logging
 import os
+import shutil
 import tempfile
 from collections import OrderedDict
 
@@ -52,15 +53,21 @@ def walk_blur(root_path):
     current = 0
 
     scores = OrderedDict()
+    tmp_root = os.path.join(root_path, "tmp")
+    logger.info("创建临时目录: %s", tmp_root)
+    os.makedirs(tmp_root, exist_ok=True)
 
     try:
         with tqdm.tqdm(total=len(what), desc="检测文件") as pbar:
             for filename in what:
-                result = detect_blur_pdf(filename)
-                if result is not None:
-                    scores.update({filename: result})
-                else:
-                    logger.debug("无法检测文件: %s", filename)
+                try:
+                    result = detect_blur_pdf(filename, tmp_root)
+                    if result is not None:
+                        scores.update({filename: result})
+                    else:
+                        logger.debug("无法检测文件: %s", filename)
+                except:
+                    logger.warning("检测文件失败: %s", filename)
 
                 pbar.update(1)
                 current += 1
@@ -72,6 +79,13 @@ def walk_blur(root_path):
         logger.warning("处理发生未知异常", exc_info=True)
 
     export_file = exports(root_path, scores.items())
+
+    try:
+        shutil.rmtree(tmp_root)
+        logger.info("删除临时目录: %s", tmp_root)
+    except:
+        logger.warning("删除临时目录失败: %s", tmp_root)
+
     logger.info("检测完成：共%d个文件 -> %s", len(what), export_file)
 
 
@@ -86,14 +100,14 @@ def exports(root, data):
     return export_file
 
 
-def detect_blur_pdf(file_name):
+def detect_blur_pdf(file_name, tmp_root):
     reader = PdfReader(file_name)
 
     page = reader.pages[0]
     import tempfile
     image_file_object = page.images[0]
 
-    with tempfile.NamedTemporaryFile(suffix=".png") as fp:
+    with tempfile.NamedTemporaryFile(suffix=".png", delete=False, dir=tmp_root) as fp:
         fp.write(image_file_object.data)
         temp_file_name = fp.name
         return detect_blur(temp_file_name)
