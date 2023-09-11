@@ -13,7 +13,7 @@ DEBUG = False
 logger = logging.getLogger(__name__)
 
 
-def init_log():
+def init_log(is_debug=False):
     global logger
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
@@ -22,7 +22,7 @@ def init_log():
     file_handler.setLevel(logging.DEBUG)
 
     console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.DEBUG if DEBUG else logging.INFO)
+    console_handler.setLevel(logging.DEBUG if is_debug else logging.INFO)
 
     # 设置日志格式
     formatter = logging.Formatter('[%(asctime)s][%(levelname)5s] %(message)s')
@@ -35,7 +35,7 @@ def init_log():
 
 def init():
     # 初始化日志
-    init_log()
+    init_log(is_debug=DEBUG)
 
     global logger
     logger = logging.getLogger()

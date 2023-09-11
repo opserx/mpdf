@@ -4,11 +4,36 @@ import os
 import tempfile
 from collections import OrderedDict
 
+import click
 import cv2
 import tqdm
 from pypdf import PdfReader
 
 logger = logging.getLogger(__name__)
+
+DEBUG = False
+
+import logging
+
+
+def init_log(is_debug=False):
+    global logger
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)
+
+    file_handler = logging.FileHandler('app.log')
+    file_handler.setLevel(logging.DEBUG)
+
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.DEBUG if is_debug else logging.INFO)
+
+    # 设置日志格式
+    formatter = logging.Formatter('[%(asctime)s][%(levelname)5s] %(message)s')
+    file_handler.setFormatter(formatter)
+    console_handler.setFormatter(formatter)
+
+    logger.addHandler(file_handler)
+    logger.addHandler(console_handler)
 
 
 def walk_blur(root_path):
@@ -37,7 +62,8 @@ def walk_blur(root_path):
 
                 pbar.update(1)
                 current += 1
-                pbar.set_description(f"检测文件{filename}")
+                sname = os.path.basename(filename)
+                pbar.set_description(f"检测文件{sname}")
     except KeyboardInterrupt:
         logger.info("用户中止")
     except:
@@ -88,28 +114,27 @@ def detect_blur(image_path):
         return None
 
 
-# @click.command()
-# @click.argument('file_path', type=click.Path(exists=True))
-# @click.option('--v', is_flag=True, help='在控制台输出调试信息')
+@click.command()
+@click.argument('file_path', type=click.Path(exists=True))
+@click.option('--v', is_flag=True, help='在控制台输出调试信息')
 def cli(file_path, v=True):
     """
-    简单合并PDF工具。以目录为单位合并文件，合并结果存放在顶层目录下的exports目录中。
-    目录内PDF文件将按照目录名顺序合并。
+    检测PDF中的图片模糊度，结果保存到excel文件中。
 
     参数:
-        file_path : 所有PDF（以目录为单位）的最上级目录，合并结果存放在[file_path]/exports目录下
+        file_path : 包含PDF的目录，支持多级目录嵌套
 
     示例:
         python check.py /Users/wangs/Downloads/
     """
+    # 初始化日志
+
+    global DEBUG
 
     if v:
-        global DEBUG
         DEBUG = True
 
-        # 初始化日志
-    from app.main import init_log
-    init_log()
+    init_log(is_debug=DEBUG)
 
     global logger
     logger = logging.getLogger()
@@ -119,4 +144,4 @@ def cli(file_path, v=True):
 
 
 if __name__ == "__main__":
-    cli("/Users/wangs/tmp/sample")
+    cli()
