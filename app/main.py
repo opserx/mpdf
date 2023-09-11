@@ -37,6 +37,7 @@ def init():
     # 初始化日志
     init_log()
 
+    global logger
     logger = logging.getLogger()
     logger.debug("日志配置完成")
 
@@ -77,7 +78,7 @@ def walk(folder_path):
     except KeyboardInterrupt:
         logger.info("用户中止")
     except:
-        logger.warning("处理发生未知异常", exect_info=True)
+        logger.warning("处理发生未知异常", exc_info=True)
 
     logger.info("合并处理完成: %d/%d", current, len(all_dirs))
     logger.info("合并文件保存在目录: %s", EXPORTS_PATH)
@@ -130,9 +131,13 @@ def check_root(root):
     logger.info("PDF文件目录: %s", ROOT_PATH)
 
     EXPORTS_PATH = os.path.join(ROOT_PATH, EXPORTS)
-    if not os.path.exists(EXPORTS_PATH):
-        os.makedirs(EXPORTS_PATH)
-        logger.debug("导出目录自动创建: %s", EXPORTS_PATH)
+
+    try:
+        if not os.path.exists(EXPORTS_PATH):
+            os.makedirs(EXPORTS_PATH)
+            logger.debug("导出目录自动创建: %s", EXPORTS_PATH)
+    except:
+        logger.error("导出目录无法创建。可能因为权限问题。请使用管理员模式打开命令行或将PDF目录放到当前用户目录")
 
 
 @click.command()
